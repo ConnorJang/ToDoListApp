@@ -20,11 +20,16 @@ class ItemTableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Loading sample items from above
-        loadSampleItems()
+        // Loading sample items from above; dont need since data perists
+        //loadSampleItems()
         
         // Adds editing mode to the table; for Deleting items
         navigationItem.leftBarButtonItem = editButtonItem
+        
+        // Load saved items
+        if let savedItems = loadItems() {
+            items += savedItems
+        }
 
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -78,6 +83,8 @@ class ItemTableViewController: UITableViewController {
                 let newIndexPath = IndexPath(row: items.count, section: 0)
                 items.append(item!)
                 tableView.insertRows(at: [newIndexPath], with: .bottom)
+                // Call saveItems to archive the data
+                saveItems()
             }
         }
     }
@@ -98,6 +105,8 @@ class ItemTableViewController: UITableViewController {
             items.remove(at: indexPath.row)
             // Delete the row from the table
             tableView.deleteRows(at: [indexPath], with: .fade)
+            // Save the data after selection was deleted
+            saveItems()
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }    
@@ -137,6 +146,22 @@ class ItemTableViewController: UITableViewController {
                 
             }
         }
+    }
+    // Saves the items in archive
+    // Meed tp call this method in unwindToList()
+    func saveItems() {
+        // This attempts to archive the items array to a specific location, returns true if successful
+        let isSaved = NSKeyedArchiver.archiveRootObject(items, toFile: Item.ArchiveURL.path)
+        if !isSaved {
+            print("Failed to save items...")
+        }
+    }
+    
+    // Load saved items
+    func loadItems()->[Item]? {
+        // Attempts to unarchive the object stored at the path "Item.ArchiveURL" and to
+        // downcast that object to an array of Item objects. Called inside viewDidLoad()
+        return NSKeyedUnarchiver.unarchiveObject(withFile: Item.ArchiveURL.path) as? [Item]
     }
     
 
